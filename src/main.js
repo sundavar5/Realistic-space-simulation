@@ -12,11 +12,15 @@ import { GalaxyGenerator } from './scenarios/GalaxyGenerator.js';
 import { starCatalog } from './data/StarCatalog.js';
 import { exoplanetCatalog } from './data/ExoplanetCatalog.js';
 import { asteroidCatalog } from './data/AsteroidCatalog.js';
+import { ChemistryEngine } from './mechanics/chemistry/ChemistryEngine.js';
+import { CivEngine } from './mechanics/civilization/CivEngine.js';
 
 class CosmosBuilder {
     constructor() {
         this.sceneManager = new SceneManager(document.getElementById('app'));
         this.physicsEngine = new PhysicsEngine();
+        this.chemistryEngine = new ChemistryEngine();
+        this.civEngine = new CivEngine();
 
         // Systems
         this.trailRenderer = new TrailRenderer(this.sceneManager.scene);
@@ -116,6 +120,16 @@ class CosmosBuilder {
     }
 
     addBody(body) {
+        // Init mechanics
+        if (body.type !== 'star') {
+            body.composition = this.chemistryEngine.generatePlanetComposition(body.mass, body.radius, 300); // approx temp
+            // Chance for life
+            if (body.mass > 1 && body.mass < 10) { // Habitable?
+                 this.civEngine.initCivilization(body);
+                 body.civilization = this.civEngine.getCivData(body);
+            }
+        }
+
         this.physicsEngine.addBody(body);
         this.sceneManager.scene.add(body.mesh);
     }
@@ -183,13 +197,11 @@ class CosmosBuilder {
         // Update Systems
         this.trailRenderer.update(this.physicsEngine.bodies);
         this.particleSystem.update(safeDt);
+        this.civEngine.update(safeDt);
 
         // UI Updates
         if (this.selectedBody) {
-            // Focus camera if needed? Or just track stats
-            // Let's just update stats in UI if they change (like velocity/pos) - but dat.gui mostly reads.
-            // We might want to auto-center camera on double click?
-            // For now, simple stat update is fine.
+            this.uiManager.updateSelectedBody(this.selectedBody);
         }
 
         this.sceneManager.update();

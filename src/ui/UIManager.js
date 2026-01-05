@@ -36,6 +36,9 @@ export class UIManager {
             name: '',
             mass: 0,
             radius: 0,
+            composition: '',
+            population: '',
+            techLevel: '',
             delete: () => {
                 if (this.currentBody) {
                     this.physicsEngine.removeBody(this.currentBody);
@@ -48,6 +51,9 @@ export class UIManager {
             name: this.infoFolder.add(this.infoParams, 'name').listen(),
             mass: this.infoFolder.add(this.infoParams, 'mass').listen(),
             radius: this.infoFolder.add(this.infoParams, 'radius').listen(),
+            composition: this.infoFolder.add(this.infoParams, 'composition').listen().name('Top Element'),
+            population: this.infoFolder.add(this.infoParams, 'population').listen(),
+            techLevel: this.infoFolder.add(this.infoParams, 'techLevel').listen(),
             delete: this.infoFolder.add(this.infoParams, 'delete').name('Delete Body')
         };
         this.infoFolder.hide();
@@ -66,6 +72,27 @@ export class UIManager {
         this.infoParams.name = body.name;
         this.infoParams.mass = body.mass.toFixed(2);
         this.infoParams.radius = body.radius.toFixed(2);
+
+        // Composition
+        if (body.composition) {
+             const sorted = Object.entries(body.composition).sort((a,b) => b[1] - a[1]);
+             if (sorted.length > 0) {
+                 this.infoParams.composition = `${sorted[0][0]} (${(sorted[0][1]*100).toFixed(1)}%)`;
+             } else {
+                 this.infoParams.composition = 'Unknown';
+             }
+        } else {
+            this.infoParams.composition = 'N/A';
+        }
+
+        // Civ
+        if (body.civilization) {
+            this.infoParams.population = Math.floor(body.civilization.population).toLocaleString();
+            this.infoParams.techLevel = `Lvl ${body.civilization.techLevel}`;
+        } else {
+            this.infoParams.population = 'Uninhabited';
+            this.infoParams.techLevel = '-';
+        }
     }
 
     resetSimulation() {

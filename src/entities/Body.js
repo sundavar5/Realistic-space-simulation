@@ -12,6 +12,11 @@ export class Body {
         this.type = type; // 'star', 'planet'
         this.isDead = false;
 
+        // Mechanics Properties
+        this.composition = {}; // From ChemistryEngine
+        this.temperature = 273; // Kelvin
+        this.civilization = null; // From CivEngine
+
         // Visual Mesh
         // Optimize segment count based on size/importance?
         // For massive catalog, we might want lower detail for distant objects.
