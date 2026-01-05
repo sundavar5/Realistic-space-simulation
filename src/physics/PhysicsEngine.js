@@ -4,6 +4,7 @@ export class PhysicsEngine {
     constructor() {
         this.bodies = [];
         this.deadBodies = [];
+        this.collisions = []; // Store collision events for particles
         this.G = 0.5; // Tuned for visual effect
         this.collisionsEnabled = true;
     }
@@ -20,8 +21,7 @@ export class PhysicsEngine {
     }
 
     update(dt) {
-        // Reset forces/accelerations?
-        // We will directly modify velocity for semi-implicit Euler.
+        this.collisions = []; // Reset events
 
         // 1. Apply Gravity (Velocity update)
         for (let i = 0; i < this.bodies.length; i++) {
@@ -78,6 +78,13 @@ export class PhysicsEngine {
                     // Merge B into A
                     this.mergeBodies(bodyA, bodyB);
                     bodiesToRemove.push(bodyB);
+
+                    // Record collision event
+                    const midPoint = bodyA.position.clone().add(bodyB.position).multiplyScalar(0.5);
+                    this.collisions.push({
+                        position: midPoint,
+                        color: 0xffaa00 // Generic explosion color
+                    });
                 }
             }
         }

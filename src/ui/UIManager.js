@@ -1,10 +1,10 @@
 import * as dat from 'dat.gui';
-import { PhysicsEngine } from '../physics/PhysicsEngine.js';
 
 export class UIManager {
     constructor(physicsEngine, sceneManager) {
         this.physicsEngine = physicsEngine;
         this.sceneManager = sceneManager;
+        this.currentBody = null;
 
         this.gui = new dat.GUI();
 
@@ -30,22 +30,49 @@ export class UIManager {
         const toolsFolder = this.gui.addFolder('Tools');
         toolsFolder.add(this.params, 'addPlanet').name('Add Random Body');
         toolsFolder.open();
+
+        this.infoFolder = this.gui.addFolder('Selected Body');
+        this.infoParams = {
+            name: '',
+            mass: 0,
+            radius: 0,
+            delete: () => {
+                if (this.currentBody) {
+                    this.physicsEngine.removeBody(this.currentBody);
+                    this.sceneManager.scene.remove(this.currentBody.mesh);
+                    this.updateSelectedBody(null);
+                }
+            }
+        };
+        this.infoControllers = {
+            name: this.infoFolder.add(this.infoParams, 'name').listen(),
+            mass: this.infoFolder.add(this.infoParams, 'mass').listen(),
+            radius: this.infoFolder.add(this.infoParams, 'radius').listen(),
+            delete: this.infoFolder.add(this.infoParams, 'delete').name('Delete Body')
+        };
+        this.infoFolder.hide();
+    }
+
+    updateSelectedBody(body) {
+        this.currentBody = body;
+        if (!body) {
+            this.infoFolder.hide();
+            return;
+        }
+
+        this.infoFolder.show();
+        this.infoFolder.open();
+
+        this.infoParams.name = body.name;
+        this.infoParams.mass = body.mass.toFixed(2);
+        this.infoParams.radius = body.radius.toFixed(2);
     }
 
     resetSimulation() {
-        // Clear all bodies
-        // Implementation depends on Main exposing a way to reset or we do it here
-        // Ideally we emit an event, but let's just callback if we want.
-        // For now, we'll implement this properly in Main integration.
         console.log("Reset requested");
-        // We need access to clear bodies.
-        // Let's assume we can clear physics engine and scene.
-        // But removing meshes from scene requires reference.
-        // Maybe we should pass a callback from Main.
     }
 
     addRandomPlanet() {
         console.log("Add Planet requested");
-        // Callback or event to Main
     }
 }
