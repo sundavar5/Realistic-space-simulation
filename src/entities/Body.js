@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { TextureGenerator } from '../utils/TextureGenerator.js';
+import { StarVertexShader, StarFragmentShader } from '../graphics/shaders/StarShader.js';
 
 export class Body {
     constructor(name, mass, radius, position, velocity, color, type = 'planet') {
@@ -12,14 +13,24 @@ export class Body {
         this.isDead = false;
 
         // Visual Mesh
-        const geometry = new THREE.SphereGeometry(radius, 64, 64);
+        // Optimize segment count based on size/importance?
+        // For massive catalog, we might want lower detail for distant objects.
+        // But scaling LOD is hard without ECS.
+        const segmentCount = (type === 'star') ? 32 : 32;
+        const geometry = new THREE.SphereGeometry(radius, segmentCount, segmentCount);
         let material;
 
         if (type === 'star') {
-            material = new THREE.MeshBasicMaterial({
-                color: color,
-                map: TextureGenerator.createPlanetTexture(color, 0xffffff, Math.random()) // subtle noise
+            // Use ShaderMaterial for stars
+            material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 },
+                    color: { value: new THREE.Color(color) }
+                },
+                vertexShader: StarVertexShader,
+                fragmentShader: StarFragmentShader
             });
+
             // Add a glow sprite
             const spriteMat = new THREE.SpriteMaterial({
                 map: TextureGenerator.createStarTexture(),
@@ -30,18 +41,13 @@ export class Body {
             this.glow = new THREE.Sprite(spriteMat);
             this.glow.scale.set(radius * 4, radius * 4, 1);
 
-            // We need to attach glow to scene or mesh.
-            // If we attach to mesh, it rotates with it, which is bad for sprites usually.
-            // But for a simple glow it's okay, or we handle it in update.
-            // Let's attach to mesh for simplicity, but billboard effect handles rotation.
         } else {
             // Planet
-            // Generate random secondary color
             const c = new THREE.Color(color);
-            const c2 = c.clone().offsetHSL(0, 0, -0.2); // Darker shade
+            const c2 = c.clone().offsetHSL(0, 0, -0.2);
 
             material = new THREE.MeshStandardMaterial({
-                color: 0xffffff, // Let texture drive color
+                color: 0xffffff,
                 map: TextureGenerator.createPlanetTexture(c.getHex(), c2.getHex(), Math.random()),
                 roughness: 0.8,
                 metalness: 0.1
@@ -67,6 +73,11 @@ export class Body {
         this.mesh.position.copy(this.position);
         this.mesh.rotation.x += this.spin.x;
         this.mesh.rotation.y += this.spin.y;
+
+        // Update shader uniforms
+        if (this.type === 'star' && this.mesh.material.uniforms) {
+            this.mesh.material.uniforms.time.value += dt;
+        }
 
         // Trail update logic will be handled by TrailRenderer
     }

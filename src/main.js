@@ -9,6 +9,9 @@ import { ParticleSystem } from './graphics/ParticleSystem.js';
 import { Starfield } from './graphics/Starfield.js';
 import { InputManager } from './interaction/InputManager.js';
 import { GalaxyGenerator } from './scenarios/GalaxyGenerator.js';
+import { starCatalog } from './data/StarCatalog.js';
+import { exoplanetCatalog } from './data/ExoplanetCatalog.js';
+import { asteroidCatalog } from './data/AsteroidCatalog.js';
 
 class CosmosBuilder {
     constructor() {
@@ -39,7 +42,7 @@ class CosmosBuilder {
 
         // Add Scenario UI
         this.uiManager.params.scenario = 'Solar System';
-        this.uiManager.gui.add(this.uiManager.params, 'scenario', ['Solar System', 'Galaxy', 'Empty']).name('Load Scenario').onChange(v => {
+        this.uiManager.gui.add(this.uiManager.params, 'scenario', ['Solar System', 'Galaxy', 'Massive Catalog', 'Asteroid Belt', 'Empty']).name('Load Scenario').onChange(v => {
             this.loadScenario(v);
         });
 
@@ -57,7 +60,36 @@ class CosmosBuilder {
             this.initSolarSystem();
         } else if (name === 'Galaxy') {
             this.initGalaxy();
+        } else if (name === 'Massive Catalog') {
+            this.initCatalog();
+        } else if (name === 'Asteroid Belt') {
+            this.initAsteroids();
         }
+    }
+
+    initCatalog() {
+        // Load stars from data
+        for (const data of starCatalog) {
+            const pos = new THREE.Vector3(data.position.x, data.position.y, data.position.z);
+            const vel = new THREE.Vector3(data.velocity.x, data.velocity.y, data.velocity.z);
+            const body = new Body(data.name, data.mass, data.radius, pos, vel, data.color, 'star');
+            this.addBody(body);
+        }
+        // Center mass
+        const center = new Body('Galactic Core', 50000, 50, new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0), 0xffffff, 'star');
+        this.addBody(center);
+    }
+
+    initAsteroids() {
+         const sun = new Body('Sun', 500, 5, new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0), 0xffff00, 'star');
+         this.addBody(sun);
+
+         for (const data of asteroidCatalog) {
+             const pos = new THREE.Vector3(data.position.x, data.position.y, data.position.z);
+             const vel = new THREE.Vector3(data.velocity.x, data.velocity.y, data.velocity.z);
+             const body = new Body(data.name, data.mass, data.radius, pos, vel, data.color, 'planet');
+             this.addBody(body);
+         }
     }
 
     initSolarSystem() {
