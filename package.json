@@ -1,0 +1,26 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sundavar5/Realistic-space-simulation.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/sundavar5/Realistic-space-simulation/issues"
+  },
+  "homepage": "https://github.com/sundavar5/Realistic-space-simulation#readme",
+  "dependencies": {
+    "dat.gui": "^0.7.9",
+    "three": "^0.182.0",
+    "vite": "^7.3.0"
+  }
+}
